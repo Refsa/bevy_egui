@@ -4,15 +4,16 @@ use bevy::{
     render::{
         render_graph::{Node, NodeRunError, RenderGraphContext},
         render_resource::{
-            std140::AsStd140, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry,
-            BindingType, BlendComponent, BlendFactor, BlendOperation, BlendState, Buffer,
-            BufferAddress, BufferBindingType, BufferDescriptor, BufferSize, BufferUsages,
-            ColorTargetState, ColorWrites, Extent3d, FrontFace, IndexFormat, LoadOp,
-            MultisampleState, Operations, PipelineLayoutDescriptor, PrimitiveState,
-            RawFragmentState, RawRenderPipelineDescriptor, RawVertexBufferLayout, RawVertexState,
+            BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType,
+            BlendComponent, BlendFactor, BlendOperation, BlendState, Buffer, BufferAddress,
+            BufferBindingType, BufferDescriptor, BufferUsages, ColorTargetState, ColorWrites,
+            Extent3d, FrontFace, IndexFormat, LoadOp, MultisampleState, Operations,
+            PipelineLayoutDescriptor, PrimitiveState, RawFragmentState,
+            RawRenderPipelineDescriptor, RawVertexBufferLayout, RawVertexState,
             RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline, SamplerBindingType,
-            ShaderModuleDescriptor, ShaderSource, ShaderStages, TextureDimension, TextureFormat,
-            TextureSampleType, TextureViewDimension, VertexAttribute, VertexFormat, VertexStepMode,
+            ShaderModuleDescriptor, ShaderSource, ShaderStages, ShaderType, TextureDimension,
+            TextureFormat, TextureSampleType, TextureViewDimension, VertexAttribute, VertexFormat,
+            VertexStepMode,
         },
         renderer::{RenderContext, RenderDevice, RenderQueue},
         texture::{BevyDefault, Image},
@@ -38,7 +39,7 @@ impl FromWorld for EguiPipeline {
         let render_device = world.get_resource::<RenderDevice>().unwrap();
 
         let shader_source = ShaderSource::Wgsl(include_str!("egui.wgsl").into());
-        let shader_module = render_device.create_shader_module(&ShaderModuleDescriptor {
+        let shader_module = render_device.create_shader_module(ShaderModuleDescriptor {
             label: Some("egui shader"),
             source: shader_source,
         });
@@ -52,9 +53,7 @@ impl FromWorld for EguiPipeline {
                     ty: BindingType::Buffer {
                         ty: BufferBindingType::Uniform,
                         has_dynamic_offset: true,
-                        min_binding_size: Some(
-                            BufferSize::new(EguiTransform::std140_size_static() as u64).unwrap(),
-                        ),
+                        min_binding_size: Some(EguiTransform::min_size()),
                     },
                     count: None,
                 }],
@@ -119,7 +118,7 @@ impl FromWorld for EguiPipeline {
             fragment: Some(RawFragmentState {
                 module: &shader_module,
                 entry_point: "fs_main",
-                targets: &[ColorTargetState {
+                targets: &[Some(ColorTargetState {
                     format: TextureFormat::bevy_default(),
                     blend: Some(BlendState {
                         color: BlendComponent {
@@ -134,7 +133,7 @@ impl FromWorld for EguiPipeline {
                         },
                     }),
                     write_mask: ColorWrites::ALL,
-                }],
+                })],
             }),
             primitive: PrimitiveState {
                 front_face: FrontFace::Cw,
@@ -333,14 +332,14 @@ impl Node for EguiNode {
                 .command_encoder
                 .begin_render_pass(&RenderPassDescriptor {
                     label: Some("egui render pass"),
-                    color_attachments: &[RenderPassColorAttachment {
+                    color_attachments: &[Some(RenderPassColorAttachment {
                         view: swap_chain_texture,
                         resolve_target: None,
                         ops: Operations {
                             load: LoadOp::Load,
                             store: true,
                         },
-                    }],
+                    })],
                     depth_stencil_attachment: None,
                 });
 

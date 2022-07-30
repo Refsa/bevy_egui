@@ -408,7 +408,7 @@ pub mod node {
     pub const EGUI_PASS: &str = "egui_pass";
 }
 
-#[derive(SystemLabel, Clone, Hash, Debug, Eq, PartialEq)]
+#[derive(SystemLabel, Clone)]
 /// The names of `bevy_egui` startup systems.
 pub enum EguiStartupSystem {
     /// Initializes Egui contexts for available windows.
@@ -416,7 +416,7 @@ pub enum EguiStartupSystem {
 }
 
 /// The names of egui systems.
-#[derive(SystemLabel, Clone, Hash, Debug, Eq, PartialEq)]
+#[derive(SystemLabel, Clone)]
 pub enum EguiSystem {
     /// Reads Egui inputs (keyboard, mouse, etc) and writes them into the [`EguiInput`] resource.
     ///
@@ -604,7 +604,7 @@ pub fn setup_pipeline(render_graph: &mut RenderGraph, config: RenderGraphConfig)
 
     render_graph
         .add_node_edge(
-            bevy::core_pipeline::node::MAIN_PASS_DRIVER,
+            bevy::render::main_graph::node::CAMERA_DRIVER,
             config.egui_pass,
         )
         .unwrap();
